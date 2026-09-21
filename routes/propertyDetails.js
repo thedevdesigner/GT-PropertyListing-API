@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { getGumTreeListing } from '../functions/getListing.js';
-import { getVendorNumber } from '../functions/getVendorNumber.js'
 
 const router = Router()
 // GET /api/v1/property
