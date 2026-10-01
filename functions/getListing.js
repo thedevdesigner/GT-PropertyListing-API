@@ -1,7 +1,11 @@
 import { Impit } from "impit";
-import { proxyList, getRandomProxy } from "../utils/proxyclient.js";
 import * as cheerio from "cheerio";
-
+import { getRandomProxy,proxyList } from "../utils/proxyclient.js";
+ const currentImpit = new Impit({
+        browser: "firefox",
+        proxyUrl: getRandomProxy(proxyList),
+        ignoreTlsErrors: true,
+});
 export async function getGumTreeListing(req) {
   let url;
   if (req.method == "GET") {
@@ -13,17 +17,11 @@ export async function getGumTreeListing(req) {
     url = `https://www.gumtree.com/search?search_category=property-to-rent&search_location=london&${pageParam}distance=5&seller_type=private&sort=date`;
   }
   
-  const maxRetries = 3;
+  const maxRetries = 5;
   let clientData = null;
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      // 1. Fresh proxy instance per attempt
-      const currentImpit = new Impit({
-        browser: "firefox",
-        proxyUrl: getRandomProxy(proxyList),
-        ignoreTlsErrors: true,
-      });
 
       console.log(`[Attempt ${attempt}/${maxRetries}] Fetching URL...`);
       const response = await currentImpit.fetch(url);
@@ -150,6 +148,106 @@ export async function getGumTreeListing(req) {
     success: true,
     message: "Listings extracted successfully.",
     data: formattedListings,
+    pagination: paginationInfo
+  };
+}
+
+export async function getRightMoveListing(req) {
+  let url;
+  console.log(req.body)
+  
+  if (req.method === "GET") {
+    const location = req.query?.location || "London";
+    const regionId = req.query?.regionId || "REGION^87490";
+    const sinceAdded = req.query?.sinceAdded || "14";
+    const pagination = req.query?.pagination || "0";
+    
+    url = `https://www.rightmove.co.uk/api/property-search/listing/search?searchLocation=${encodeURIComponent(location)}&useLocationIdentifier=true&locationIdentifier=${encodeURIComponent(regionId)}&radius=1.0&_includeLetAgreed=on&maxDaysSinceAdded=${sinceAdded}&index=${pagination}&sortType=6&channel=RENT&transactionType=LETTING`;
+  } else if (req.method === "POST") {
+    const location = req.body?.location || "London";
+    const regionId = req.body?.regionId || "REGION^87490";
+    const sinceAdded = req.body?.sinceAdded || "14";
+    const pagination = req.body?.pagination || "0";
+
+    url = `https://www.rightmove.co.uk/api/property-search/listing/search?searchLocation=${encodeURIComponent(location)}&useLocationIdentifier=true&locationIdentifier=${encodeURIComponent(regionId)}&radius=1.0&_includeLetAgreed=on&maxDaysSinceAdded=${sinceAdded}&index=${pagination}&sortType=6&channel=RENT&transactionType=LETTING`;
+  } else {
+    return {
+      success: false,
+      message: "Unsupported request method.",
+      data: [],
+      pagination: { total: 0, options: [], first: "0", last: "0", next: "0", page: "1" }
+    };
+  }
+
+  const maxRetries = 5;
+  let responseData = null;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+
+
+      console.log(`[RightMove Attempt ${attempt}/${maxRetries}] Fetching API URL...`);
+      const fetchData = await currentImpit.fetch(url);
+
+      if (!fetchData.ok) {
+        throw new Error(`HTTP error! status: ${fetchData.status}`);
+      }
+
+      responseData = await fetchData.json();
+
+      if (responseData && Array.isArray(responseData.properties)) {
+        console.log(`[RightMove Attempt ${attempt}] Successfully fetched and parsed properties! Count: ${responseData.properties.length}`);
+        break;
+      }
+
+      console.warn(`[RightMove Attempt ${attempt}] Response missing 'properties' array. Retrying...`);
+
+    } catch (err) {
+      console.error(`[RightMove Attempt ${attempt}] Error encountered: ${err.message}`);
+    }
+
+    if (attempt < maxRetries) {
+      const waitTime = 2000 * attempt;
+      console.log(`Waiting ${waitTime}ms before trying a new proxy rotation...`);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+    }
+  }
+
+  const properties = responseData?.properties;
+
+  if (!properties || !Array.isArray(properties) || properties.length === 0) {
+    return {
+      success: false,
+      message: "Failed to extract RightMove listings or no properties found after maximum retries.",
+      data: [],
+      pagination: responseData?.pagination ?? { total: 0, options: [], first: "0", last: "0", next: "0", page: "1" }
+    };
+  }
+
+  const formattedProperties = properties.map(property => ({
+    summary: property?.summary ?? null,
+    displayAddress: property?.displayAddress ?? null,
+    images: property?.images ?? [],
+    propertySubType: property?.propertySubType ?? null,
+    listingUpdate: property?.listingUpdate ?? null,
+    price: property?.price ?? null,
+    customer: property?.customer ?? null,
+    propertyUrl: property?.propertyUrl ? `https://www.rightmove.co.uk${property.propertyUrl}` : null
+  }));
+
+  const paginationInfo = responseData?.pagination ?? {
+    total: 0,
+    options: [],
+    first: "0",
+    last: "0",
+    next: "0",
+    page: "1"
+  };
+
+  return {
+    success: true,
+    message: "Listings extracted successfully.",
+    data: formattedProperties,
     pagination: paginationInfo
   };
 }

@@ -1,14 +1,8 @@
 import dotenv  from "dotenv";
 dotenv.config()
+// FREE PROXIES FROM GEONODE
 export const proxyList = [
-`http://${process.env.COROXY_USERNAME}:${process.env.COPROXY_PASSWORD}@107.149.32.82:16967`,
-`http://${process.env.COROXY_USERNAME}:${process.env.COPROXY_PASSWORD}@107.149.32.83:27203`,
-`http://${process.env.COROXY_USERNAME}:${process.env.COPROXY_PASSWORD}@107.149.32.81:17202`,
-`http://${process.env.COROXY_USERNAME}:${process.env.COPROXY_PASSWORD}@107.149.32.80:18692`,
-`http://${process.env.COROXY_USERNAME}:${process.env.COPROXY_PASSWORD}@107.149.32.84:17698`,
-
-]
-
+`http://${process.env.GEONODE_USERNAME}:${process.env.GEONODE_PASSWORD}@proxy.geonode.io:${process.env.PORT}`]
 // 2. Closure function to handle IP rotation
 export function getRandomProxy(proxies) {
     if (!Array.isArray(proxies) || proxies.length === 0) {
@@ -16,5 +10,5 @@ export function getRandomProxy(proxies) {
     }
     const randomIndex = Math.floor(Math.random() * proxies.length); 
     return proxies[randomIndex];
-}
+}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
 

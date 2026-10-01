@@ -2,11 +2,14 @@
 .env
 .env.*
 !.env.example
+TODO.md
 
 
 
 # Dependency directories (if any node_modules are generated locally)
 node_modules/
+ip.json
+test*
 
 # Operating system cache and metadata
 .DS_Store
@@ -14,6 +17,7 @@ Thumbs.db
 
 # Build outputs or logs
 dist/
+drizzle
 build/
 *.log
 npm-debug.log*

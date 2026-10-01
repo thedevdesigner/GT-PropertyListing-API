@@ -4,21 +4,30 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "npm start"
+    "test": "npm start",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@libsql/client": "^0.18.0",
     "cheerio": "^1.2.0",
     "cors": "^2.8.6",
+    "drizzle-orm": "^0.45.3",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
     "helmet": "^8.3.0",
     "impit": "^0.14.4",
+    "undici": "^8.11.2",
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "dotenv": "^17.4.2"
+    "dotenv": "^17.4.2",
+    "drizzle-kit": "^0.31.11",
+    "http-proxy-agent": "^9.1.0",
+    "joi": "^18.2.9"
   }
 }
