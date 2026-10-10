@@ -30,6 +30,7 @@ const createFollowUpSchema = Joi.object({
   status: Joi.string().valid(...ALLOWED_STATUSES).default("pending"),
   attempts: Joi.number().min(0).max(3).default(0),
   notes: Joi.string().allow("").default(""),
+  contactName:Joi.string().allow("").default(""),
   dateAdded: Joi.string().default(() => new Date().toISOString()),
 });
 
