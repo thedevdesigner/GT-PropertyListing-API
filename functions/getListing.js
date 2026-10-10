@@ -137,19 +137,19 @@ export async function getGumTreeListing(req) {
       pagination: { numberOfPages: 0, currentPage: 1 },
     };
   }
-   // get customer name
-  const gn = async(url)=>{
-    return await fetchContactNameForUrl(url)
-  }
+  // get customer name
+  const gn = async (url) => {
+    return await fetchContactNameForUrl(url);
+  };
 
- // Map and fetch customer names concurrently
+  // Map and fetch customer names concurrently
   const formattedListings = await Promise.all(
     searchAds.map(async (ad) => {
       const listingUrl = `https://www.gumtree.com${ad?.path ?? ""}`;
-      
+
       // Await the asynchronous fetch and extraction for each individual URL
-      const customerName = listingUrl.includes("gumtree.com") 
-        ? await fetchContactNameForUrl(listingUrl) 
+      const customerName = listingUrl.includes("gumtree.com")
+        ? await fetchContactNameForUrl(listingUrl)
         : "";
 
       return {
@@ -166,8 +166,8 @@ export async function getGumTreeListing(req) {
           replyPhone: ad?.srpContactDetail?.replyPhone ?? null,
         },
       };
-    })
-  ); 
+    }),
+  );
   const paginationInfo = {
     numberOfPages: clientData?.resultsPage?.adsPagination?.numberOfPages ?? 1,
     currentPage: clientData?.resultsPage?.adsPagination?.currentPage ?? 1,
@@ -286,6 +286,7 @@ export async function getRightMoveListing(req) {
     propertyUrl: property?.propertyUrl
       ? `https://www.rightmove.co.uk${property.propertyUrl}`
       : null,
+    phone: property?.customer?.contactTelephone ?? "",
   }));
 
   const paginationInfo = responseData?.pagination ?? {
