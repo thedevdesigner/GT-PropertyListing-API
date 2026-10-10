@@ -6,8 +6,8 @@ export const followUps = sqliteTable("follow_ups", {
   price: text("price").default("POA"),
   location: text("location").default("UK"),
   phone: text("phone").default(""),
-  url: text("url").default(""),
-  imageUrl: text("image_url").default(""),
+  url: Joi.string().allow("").default(""),         // <-- Relaxed from .uri() to .string()
+  imageUrl: Joi.string().allow("").default(""),
   customerName: text("contact_name").default(""), // Added seller/agent contact name field
   status: text("status", { 
     enum: [
