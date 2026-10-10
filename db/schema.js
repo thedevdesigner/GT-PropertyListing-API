@@ -8,7 +8,7 @@ export const followUps = sqliteTable("follow_ups", {
   phone: text("phone").default(""),
   url: text("url").default(""),
   imageUrl: text("image_url").default(""),
-  contactName: text("contact_name").default(""), // Added seller/agent contact name field
+  customerName: text("contact_name").default(""), // Added seller/agent contact name field
   status: text("status", { 
     enum: [
       "pending", 

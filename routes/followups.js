@@ -18,7 +18,7 @@ const ALLOWED_STATUSES = [
   "not_interested"
 ];
 
-// Validation Schema for Creating/Upserting a Follow-Up
+// Validation Schema for Creating/Upserting a Follow-Up (Matches Frontend field name: customerName)
 const createFollowUpSchema = Joi.object({
   id: Joi.string().required(),
   title: Joi.string().required(),
@@ -30,7 +30,7 @@ const createFollowUpSchema = Joi.object({
   status: Joi.string().valid(...ALLOWED_STATUSES).default("pending"),
   attempts: Joi.number().min(0).max(3).default(0),
   notes: Joi.string().allow("").default(""),
-  contactName:Joi.string().allow("").default(""),
+  customerName: Joi.string().allow("").default(""), // <-- Aligned with frontend
   dateAdded: Joi.string().default(() => new Date().toISOString()),
 });
 
@@ -38,16 +38,13 @@ const createFollowUpSchema = Joi.object({
 const updateFollowUpSchema = Joi.object({
   status: Joi.string().valid(...ALLOWED_STATUSES),
   attempts: Joi.number().min(0).max(3),
-  notes: Joi.string().allow("")
+  notes: Joi.string().allow(""),
+  customerName: Joi.string().allow("")
 }).min(1);
 
 // Root Collection Routes: GET & POST
-// GET: Recovery layer when localStorage is cleared
 router.get('/', async (req, res, next) => {
   try {
-    // 1. Inspect what tables actually exist in THIS connection
-    const tableCheck = await db.run("SELECT name FROM sqlite_master WHERE type='table';");
-    console.log("--> TABLES CURRENTLY IN THIS TURSO INSTANCE:", tableCheck.rows);
     const records = await db.select().from(followUps);
     return res.status(200).json({
       success: true,
@@ -55,7 +52,6 @@ router.get('/', async (req, res, next) => {
       data: records,
     });
   } catch (error) {
-    console.error("--> DETAILED QUERY ERROR:", error);
     next(error);
   }
 });
@@ -73,7 +69,7 @@ router.post('/', async (req, res, next) => {
       });
     }
 
-    // Ensure dateAdded is populated explicitly
+    // Explicit payload mapping keeping customerName distinct from notes
     const insertPayload = {
       id: value.id,
       title: value.title,
@@ -85,6 +81,7 @@ router.post('/', async (req, res, next) => {
       status: value.status,
       attempts: value.attempts,
       notes: value.notes,
+      customerName: value.customerName, // <-- Saved to its own dedicated column
       dateAdded: value.dateAdded || new Date().toISOString(),
     };
 
@@ -97,6 +94,7 @@ router.post('/', async (req, res, next) => {
           status: insertPayload.status,
           attempts: insertPayload.attempts,
           notes: insertPayload.notes,
+          customerName: insertPayload.customerName,
         },
       })
       .returning();
@@ -110,12 +108,11 @@ router.post('/', async (req, res, next) => {
   }
 });
 
-// PATCH Route: Update CRM fields for a specific property ID
+// PATCH Route
 router.patch("/:id", async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    // 1. Validate payload
     const { error, value } = updateFollowUpSchema.validate(req.body, { abortEarly: false });
 
     if (error) {
@@ -126,14 +123,12 @@ router.patch("/:id", async (req, res, next) => {
       });
     }
 
-    // 2. Perform database update
     const updated = await db
       .update(followUps)
       .set(value)
       .where(eq(followUps.id, id))
       .returning();
 
-    // 3. Handle non-existent ID
     if (updated.length === 0) {
       return res.status(404).json({
         success: false,
@@ -141,7 +136,6 @@ router.patch("/:id", async (req, res, next) => {
       });
     }
 
-    // 4. Return updated record
     return res.status(200).json({
       success: true,
       data: updated[0],
@@ -151,7 +145,7 @@ router.patch("/:id", async (req, res, next) => {
   }
 });
 
-// DELETE: Remove record from CRM
+// DELETE
 router.delete("/:id", async (req, res, next) => {
   try {
     const { id } = req.params;
