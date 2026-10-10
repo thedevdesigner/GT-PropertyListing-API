@@ -8,9 +8,20 @@ export const followUps = sqliteTable("follow_ups", {
   phone: text("phone").default(""),
   url: text("url").default(""),
   imageUrl: text("image_url").default(""),
-  status: text("status", { enum: ["pending", "contacted", "converted", "rejected"] }).default("pending"),
+  contactName: text("contact_name").default(""), // Added seller/agent contact name field
+  status: text("status", { 
+    enum: [
+      "pending", 
+      "no_answer", 
+      "callback", 
+      "sa_pending", 
+      "sa_allowed", 
+      "viewing_booked", 
+      "rejected", 
+      "not_interested"
+    ] 
+  }).default("pending"),
   attempts: integer("attempts").default(0),
   notes: text("notes").default(""),
-  // Added default fn fallback so Drizzle never sends null
   dateAdded: text("date_added").notNull().$defaultFn(() => new Date().toISOString()),
 });
