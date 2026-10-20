@@ -1,16 +1,25 @@
 import { currentImpit } from "./currentImpit.js";
 import * as cheerio from "cheerio";
 import { fetchContactNameForUrl } from "./fetchContactName.js";
-import { promise } from "zod";
 export async function getGumTreeListing(req) {
+const formatLocation = (str) => {
+    // If there is a comma, take everything before it. Otherwise, use the full string.
+    const target = str.includes(',') ? str.split(',')[0] : str;
+    
+    // Trim, convert to lowercase, and replace every space with a dash
+    return target.trim().toLowerCase().replace(/ /g, '-');
+};
   let url;
+  let  {query} = req.query
+  let getQuery = encodeURIComponent(query).replace(/%20/g, '+')
   if (req.method == "GET") {
-    url = `https://www.gumtree.com/search?search_category=property-to-rent&search_location=london&distance=5&seller_type=private&sort=date`;
+    url = `https://www.gumtree.com/search?search_location=${getQuery}&search_category=flats-houses&seller_type=private&distance=1&sort=date`;
   }
-
+  
   if (req.method == "POST") {
+    let postQuery = formatLocation(req.body.searchQuery)
     const pageParam = req.body?.page > 1 ? `page=${req.body.page}&` : "";
-    url = `https://www.gumtree.com/search?search_category=property-to-rent&search_location=london&${pageParam}distance=5&seller_type=private&sort=date`;
+    url = `https://www.gumtree.com/search?search_category=flats-houses&search_location=${postQuery}&${pageParam}distance=1&seller_type=private&sort=date`; 
   }
 
   const maxRetries = 5;

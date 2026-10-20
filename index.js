@@ -46,6 +46,32 @@ app.get('/api/v1/rightmove/typeahead', async (req, res) => {
     return res.status(500).json({ error: "Failed to fetch typeahead suggestions" });
   }
 });
+// gumtree autocomplete search feature API
+app.get('/api/v1/gumtree/typeahead', async (req, res) => {
+  try {
+    const { query } = req.query;
+    if (!query) {
+      return res.json({ typeAheadLocations: [] });
+    }
+
+    const targetUrl = `https://www.gumtree.com/ajax/location/prefix?input=${encodeURIComponent(query)}`;
+    
+    // Server-to-server request bypasses browser CORS restrictions
+    const response = await fetch(targetUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        "referrer": "https://www.gumtree.com",
+
+      }
+    });
+
+    const data = await response.json();
+    return res.json(data);
+  } catch (error) {
+    console.error("Typeahead proxy error:", error);
+    return res.status(500).json({ error: "Failed to fetch typeahead suggestions" });
+  }
+})
 
 // Global Error Handler
 app.use((err, req, res, next) => {
