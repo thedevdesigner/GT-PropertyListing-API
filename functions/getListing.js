@@ -295,6 +295,7 @@ export async function getRightMoveListing(req) {
     propertyUrl: property?.propertyUrl
       ? `https://www.rightmove.co.uk${property.propertyUrl}`
       : null,
+    phone: property?.customer?.contactTelephone ?? "",
   }));
 
   const paginationInfo = responseData?.pagination ?? {
